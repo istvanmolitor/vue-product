@@ -37,6 +37,24 @@ const productRoutes: RouteRecordRaw[] = [
     component: () => import('../views/ProductUnitEdit.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/admin/product-category',
+    name: 'admin-product-categories',
+    component: () => import('../views/ProductCategoryIndex.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin/product-category/create',
+    name: 'admin-product-category-create',
+    component: () => import('../views/ProductCategoryCreate.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin/product-category/:id/edit',
+    name: 'admin-product-category-edit',
+    component: () => import('../views/ProductCategoryEdit.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 export default productRoutes

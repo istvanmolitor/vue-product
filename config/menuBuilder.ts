@@ -1,5 +1,5 @@
 import { MenuBuilder, type MenuItemConfig } from '@menu/index'
-import { ShoppingBag, Package } from 'lucide-vue-next'
+import { ShoppingBag, Package, Layers } from 'lucide-vue-next'
 
 /**
  * Product Menu Builder
@@ -30,6 +30,13 @@ export class ProductMenuBuilder extends MenuBuilder {
           path: '/admin/product',
           icon: ShoppingBag,
           order: 10
+        },
+        {
+          id: 'product-categories',
+          title: 'Kategóriák',
+          path: '/admin/product-category',
+          icon: Layers,
+          order: 15
         },
         {
           id: 'product-units',

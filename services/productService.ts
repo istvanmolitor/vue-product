@@ -14,6 +14,13 @@ export interface ProductTranslation {
   description?: string | null
 }
 
+export interface ProductImage {
+  id?: number
+  image_url: string | null
+  is_main?: boolean
+  sort?: number
+}
+
 export interface Product {
   id?: number
   sku: string
@@ -24,6 +31,7 @@ export interface Product {
   active?: boolean
   product_unit_id?: number | null
   product_unit?: ProductUnit
+  product_images?: ProductImage[]
   translations?: ProductTranslation[]
   created_at?: string
   updated_at?: string
@@ -35,6 +43,7 @@ export interface ProductFormData {
   price?: number
   active?: boolean
   product_unit_id?: number | null
+  product_images?: ProductImage[]
   translations?: Record<number, { name: string; description?: string | null }>
 }
 
@@ -80,5 +89,3 @@ export const productService = {
     return api.delete(`/api/admin/product/products/${id}`)
   },
 }
-
-

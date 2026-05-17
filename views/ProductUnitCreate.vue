@@ -28,8 +28,22 @@ const handleSubmit = async () => {
   try {
     isSaving.value = true
     errors.value = {}
-    await productUnitService.create(form)
+    const response: any = await productUnitService.create(form)
     toastService.success('Mennyiségi egység sikeresen létrehozva!')
+
+    const createdUnitId = response?.data?.data?.id ?? response?.data?.id ?? response?.id
+
+    if (createdUnitId !== undefined && createdUnitId !== null) {
+      await router.push({
+        name: 'admin-product-unit-edit',
+        params: {
+          id: String(createdUnitId),
+        },
+      })
+
+      return
+    }
+
     router.push('/admin/product-unit')
   } catch (error: any) {
     console.error('Hiba a mennyiségi egység létrehozásakor:', error)

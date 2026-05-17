@@ -124,11 +124,25 @@ const handleSubmit = async () => {
   try {
     isSaving.value = true
     errors.value = {}
-    await productService.create({
+    const response: any = await productService.create({
       ...form,
       product_images: buildProductImagesPayload()
     })
     toastService.success('Termék sikeresen létrehozva!')
+
+    const createdProductId = response?.data?.data?.id ?? response?.data?.id ?? response?.id
+
+    if (createdProductId !== undefined && createdProductId !== null) {
+      await router.push({
+        name: 'admin-product-edit',
+        params: {
+          id: String(createdProductId),
+        },
+      })
+
+      return
+    }
+
     router.push('/admin/product')
   } catch (error: any) {
     console.error('Hiba a termék létrehozásakor:', error)

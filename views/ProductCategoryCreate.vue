@@ -49,8 +49,22 @@ const handleSubmit = async () => {
   try {
     isSaving.value = true
     errors.value = {}
-    await productCategoryService.create(form)
+    const response: any = await productCategoryService.create(form)
     toastService.success('Termékkategória sikeresen létrehozva!')
+
+    const createdCategoryId = response?.data?.data?.id ?? response?.data?.id ?? response?.id
+
+    if (createdCategoryId !== undefined && createdCategoryId !== null) {
+      await router.push({
+        name: 'admin-product-category-edit',
+        params: {
+          id: String(createdCategoryId),
+        },
+      })
+
+      return
+    }
+
     router.push('/admin/product-category')
   } catch (error: any) {
     console.error('Hiba a termékkategória létrehozásakor:', error)

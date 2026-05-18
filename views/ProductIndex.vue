@@ -99,14 +99,12 @@ onMounted(() => {
         </span>
       </template>
       <template #row-actions="{ row }">
-        <div class="flex items-center gap-2">
-          <EditButton
-            @click="editProduct(row.id!)"
-          />
-          <DeleteButton
-            @confirm="deleteProduct(row.id!)"
-          />
-        </div>
+        <EditButton
+          @click="editProduct(row.id!)"
+        />
+        <DeleteButton
+          @confirm="deleteProduct(row.id!)"
+        />
       </template>
       <template #empty>
         Nincs megjeleníthető termék.

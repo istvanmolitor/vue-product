@@ -229,14 +229,12 @@ onMounted(() => {
         </div>
       </template>
       <template #row-actions="{ row }">
-        <div class="flex items-center gap-2">
-          <EditButton
-            @click="editProductCategory(row.id!)"
-          />
-          <DeleteButton
-            @confirm="deleteProductCategory(row.id!)"
-          />
-        </div>
+        <EditButton
+          @click="editProductCategory(row.id!)"
+        />
+        <DeleteButton
+          @confirm="deleteProductCategory(row.id!)"
+        />
       </template>
       <template #empty>
         Nincs megjeleníthető termékkategória.

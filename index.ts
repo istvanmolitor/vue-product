@@ -12,5 +12,5 @@ export { default as router } from './router/index'
 // Menu configuration
 export { ProductMenuBuilder, productMenuBuilder } from './config/menuBuilder'
 
-
-
+// Components
+export { default as ProductSelect } from './components/ProductSelect.vue'

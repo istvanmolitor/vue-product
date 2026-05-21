@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import Modal from '@admin/components/ui/Modal.vue'
+import { productService, type Product } from '../services/productService'
 
-interface ProductImage {
-  image_url?: string | null
-  is_main?: boolean
-}
-
-interface ProductSelectOption {
+type ProductSelectOption = Omit<Product, 'id'> & {
   id: number
-  name?: string
-  label?: string
-  sku?: string
   image_url?: string | null
   main_image_url?: string | null
-  product_images?: ProductImage[]
+}
+
+interface ProductDisplayItem {
+  id: number
+  name: string
+  sku: string
+  imageUrl: string | null
+  searchText: string
 }
 
 interface Props {
   id?: string
   modelValue?: number | null
-  options: ProductSelectOption[]
+  options?: ProductSelectOption[]
   placeholder?: string
   searchPlaceholder?: string
   emptyMessage?: string
@@ -32,6 +32,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   id: undefined,
   modelValue: null,
+  options: () => [],
   placeholder: 'Valassz termeket',
   searchPlaceholder: 'Kereses cikkszamra vagy nevere...',
   emptyMessage: 'Nincs talalat.',
@@ -45,7 +46,20 @@ const emit = defineEmits<{
 }>()
 
 const isModalOpen = ref(false)
+const isLoading = ref(false)
 const search = ref('')
+const products = ref<ProductSelectOption[]>([...props.options])
+const selectedProductData = ref<ProductSelectOption | null>(null)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let productsRequestId = 0
+let selectedProductRequestId = 0
+
+const clearSearchTimeout = (): void => {
+  if (searchTimeout !== null) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
+}
 
 const resolveImageUrl = (product: ProductSelectOption): string | null => {
   if (product.image_url) {
@@ -65,30 +79,28 @@ const resolveImageUrl = (product: ProductSelectOption): string | null => {
   return mainImage?.image_url ?? product.product_images[0]?.image_url ?? null
 }
 
-const normalizedProducts = computed(() => {
-  return props.options.map((product) => {
-    const name = String(product.name ?? product.label ?? '').trim()
-    const sku = String(product.sku ?? '').trim()
-    const fallbackName = name.length > 0 ? name : `#${product.id}`
-
-    return {
-      id: product.id,
-      name: fallbackName,
-      sku: sku.length > 0 ? sku : '-',
-      imageUrl: resolveImageUrl(product),
-      searchText: `${fallbackName} ${sku}`.toLowerCase(),
-    }
-  })
-})
-
-const filteredProducts = computed(() => {
-  const query = search.value.trim().toLowerCase()
-
-  if (query.length === 0) {
-    return normalizedProducts.value
+const normalizeProduct = (product: ProductSelectOption | null): ProductDisplayItem | null => {
+  if (product === null) {
+    return null
   }
 
-  return normalizedProducts.value.filter((product) => product.searchText.includes(query))
+  const name = String(product.name ?? '').trim()
+  const sku = String(product.sku ?? '').trim()
+  const fallbackName = name.length > 0 ? name : `#${product.id}`
+
+  return {
+    id: product.id,
+    name: fallbackName,
+    sku: sku.length > 0 ? sku : '-',
+    imageUrl: resolveImageUrl(product),
+    searchText: `${fallbackName} ${sku}`.toLowerCase(),
+  }
+}
+
+const normalizedProducts = computed(() => products.value.map((product) => normalizeProduct(product)).filter((product): product is ProductDisplayItem => product !== null))
+
+const filteredProducts = computed(() => {
+  return normalizedProducts.value
 })
 
 const selectedProduct = computed(() => {
@@ -96,11 +108,91 @@ const selectedProduct = computed(() => {
     return null
   }
 
-  return normalizedProducts.value.find((product) => product.id === props.modelValue) ?? null
+  return normalizeProduct(selectedProductData.value ?? products.value.find((product) => product.id === props.modelValue) ?? null)
+})
+
+const setProducts = (items: ProductSelectOption[]): void => {
+  products.value = items.map((product) => ({ ...product }))
+}
+
+const fetchProducts = async (query: string): Promise<void> => {
+  const requestId = ++productsRequestId
+  isLoading.value = true
+
+  try {
+    const response = await productService.searchForSelect({
+      search: query.trim().length > 0 ? query.trim() : undefined,
+      per_page: 20,
+    })
+
+    if (requestId !== productsRequestId) {
+      return
+    }
+
+    setProducts((response.data.data ?? []) as ProductSelectOption[])
+  } finally {
+    if (requestId === productsRequestId) {
+      isLoading.value = false
+    }
+  }
+}
+
+const fetchSelectedProduct = async (productId: number): Promise<void> => {
+  const requestId = ++selectedProductRequestId
+  const existingProduct = products.value.find((product) => product.id === productId)
+
+  if (existingProduct) {
+    selectedProductData.value = existingProduct
+    return
+  }
+
+  try {
+    const response = await productService.getById(productId)
+
+    if (requestId !== selectedProductRequestId) {
+      return
+    }
+
+    selectedProductData.value = response.data.data as ProductSelectOption
+  } catch {
+    if (requestId === selectedProductRequestId) {
+      selectedProductData.value = null
+    }
+  }
+}
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (value === null || value === props.emptyValue) {
+      selectedProductData.value = null
+      return
+    }
+
+    void fetchSelectedProduct(value)
+  },
+  { immediate: true }
+)
+
+watch(search, () => {
+  if (!isModalOpen.value) {
+    return
+  }
+
+  clearSearchTimeout()
+
+  searchTimeout = setTimeout(() => {
+    void fetchProducts(search.value)
+  }, 300)
+})
+
+onBeforeUnmount(() => {
+  clearSearchTimeout()
 })
 
 const selectProduct = (productId: number): void => {
   emit('update:modelValue', productId)
+  selectedProductData.value = products.value.find((product) => product.id === productId) ?? selectedProductData.value
   isModalOpen.value = false
   search.value = ''
 }
@@ -111,15 +203,19 @@ const openModal = (): void => {
   }
 
   isModalOpen.value = true
+  clearSearchTimeout()
+  void fetchProducts(search.value)
 }
 
 const closeModal = (): void => {
   isModalOpen.value = false
   search.value = ''
+  clearSearchTimeout()
 }
 
 const clearSelection = (): void => {
   emit('update:modelValue', props.emptyValue)
+  selectedProductData.value = null
 }
 </script>
 
@@ -167,7 +263,11 @@ const clearSelection = (): void => {
         />
 
         <div class="max-h-96 overflow-y-auto rounded-md border p-1">
-          <div v-if="filteredProducts.length === 0" class="px-3 py-2 text-sm text-muted-foreground">
+          <div v-if="isLoading" class="px-3 py-2 text-sm text-muted-foreground">
+            Betoltes...
+          </div>
+
+          <div v-else-if="filteredProducts.length === 0" class="px-3 py-2 text-sm text-muted-foreground">
             {{ emptyMessage }}
           </div>
 

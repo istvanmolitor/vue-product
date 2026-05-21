@@ -70,6 +70,9 @@ export const productService = {
   getAll(params?: { search?: string; sort?: string; direction?: string; page?: number }) {
     return api.get<PaginatedResponse<Product>>('/api/admin/product/products', { params })
   },
+  searchForSelect(params?: { search?: string; page?: number; per_page?: number }) {
+    return api.get<PaginatedResponse<Product>>('/api/admin/product/products/select', { params })
+  },
   getById(id: number | string) {
     return api.get<SingleResponse<Product>>(`/api/admin/product/products/${id}`)
   },

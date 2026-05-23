@@ -15,6 +15,7 @@ import Icon from '@admin/components/ui/Icon.vue'
 import { FormButtons } from '@admin'
 import { useRouter, useRoute } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
+import { normalizeTranslations } from '@language'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
@@ -145,38 +146,7 @@ const fetchProduct = async () => {
     normalizeProductImages()
 
     const rawTranslations = data.data.translations ?? {}
-
-    if (Array.isArray(rawTranslations)) {
-      form.translations = rawTranslations.reduce((translations, translation: any) => {
-        const languageId = Number(translation?.language_id)
-
-        if (!Number.isFinite(languageId) || languageId <= 0) {
-          return translations
-        }
-
-        translations[languageId] = {
-          name: translation?.name ?? '',
-          description: translation?.description ?? '',
-        }
-
-        return translations
-      }, {} as NonNullable<ProductFormData['translations']>)
-    } else {
-      form.translations = Object.entries(rawTranslations).reduce((translations, [languageIdKey, translation]: [string, any]) => {
-        const languageId = Number(languageIdKey)
-
-        if (!Number.isFinite(languageId) || languageId <= 0) {
-          return translations
-        }
-
-        translations[languageId] = {
-          name: translation.name ?? '',
-          description: translation.description ?? '',
-        }
-
-        return translations
-      }, {} as NonNullable<ProductFormData['translations']>)
-    }
+    form.translations = normalizeTranslations(rawTranslations, ['name', 'description'])
 
     availableUnits.value = data.product_units
   } catch (error) {

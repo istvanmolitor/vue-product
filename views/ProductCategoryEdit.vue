@@ -8,6 +8,7 @@ import CardDescription from '@admin/components/ui/CardDescription.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
+import { normalizeTranslations } from '@language'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
 import { useRouter, useRoute } from 'vue-router'
@@ -36,14 +37,7 @@ const fetchEditData = async () => {
 
     form.parent_id = category.parent_id
     form.slug = category.slug
-    form.translations = Object.entries(category.translations ?? {}).reduce((translations, [languageIdKey, translation]) => {
-      translations[Number(languageIdKey)] = {
-        name: translation.name ?? '',
-        description: translation.description ?? '',
-      }
-
-      return translations
-    }, {} as NonNullable<ProductCategoryFormData['translations']>)
+    form.translations = normalizeTranslations(category.translations, ['name', 'description'])
   } catch (error) {
     console.error('Hiba az adatok betöltésekor:', error)
     toastService.error('Hiba történt az adatok betöltésekor.')

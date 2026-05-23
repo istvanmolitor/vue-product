@@ -9,6 +9,7 @@ import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
 import Checkbox from '@admin/components/ui/Checkbox.vue'
+import { normalizeTranslations } from '@language'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
 import { useRouter, useRoute } from 'vue-router'
@@ -36,15 +37,7 @@ const fetchProductUnit = async () => {
     const productUnit = productUnitResponse.data.data
     form.code = productUnit.code
     form.enabled = productUnit.enabled || false
-
-    form.translations = Object.entries(productUnit.translations ?? {}).reduce((translations, [languageIdKey, translation]) => {
-      translations[Number(languageIdKey)] = {
-        name: translation.name ?? '',
-        short_name: translation.short_name ?? '',
-      }
-
-      return translations
-    }, {} as NonNullable<ProductUnitFormData['translations']>)
+    form.translations = normalizeTranslations(productUnit.translations, ['name', 'short_name'])
   } catch (error) {
     console.error('Hiba a mennyiségi egység betöltésekor:', error)
     toastService.error('Hiba történt a mennyiségi egység betöltésekor.')

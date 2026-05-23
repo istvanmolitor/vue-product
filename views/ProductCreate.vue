@@ -11,16 +11,21 @@ import CardTitle from '@admin/components/ui/CardTitle.vue'
 import Checkbox from '@admin/components/ui/Checkbox.vue'
 import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
+import Textarea from '@admin/components/ui/Textarea.vue'
 import { FormButtons } from '@admin'
 import { useRouter } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
+import TranslationRepeater from '@language/components/TranslationRepeater.vue'
+import { languageService, type Language } from '@language/services/languageService'
 
 const router = useRouter()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
+const availableLanguages = ref<Language[]>([])
+const selectedLanguages = ref<Language[]>([])
 const errors = ref<Record<string, string[]>>({})
 
 const form = reactive<ProductFormData>({
@@ -107,17 +112,61 @@ const setMainProductImage = (index: number) => {
   }))
 }
 
-const fetchUnits = async () => {
+const fetchCreateData = async () => {
   try {
     isLoading.value = true
-    const { data } = await productService.getCreateData()
-    availableUnits.value = data.product_units
+    const [productsResponse, languagesResponse] = await Promise.all([
+      productService.getCreateData(),
+      languageService.getCreateData(),
+    ])
+
+    availableUnits.value = productsResponse.data.product_units
+    availableLanguages.value = languagesResponse.data.availableLanguages
+    selectedLanguages.value = [...availableLanguages.value]
+    form.translations = {}
+
+    selectedLanguages.value.forEach((language) => {
+      if (language.id) {
+        form.translations![language.id] = { name: '', description: '' }
+      }
+    })
   } catch (error) {
     console.error('Hiba a mértékegységek betöltésekor:', error)
-    toastService.error('Hiba történt a mértékegységek betöltésekor.')
+    toastService.error('Hiba történt az adatok betöltésekor.')
   } finally {
     isLoading.value = false
   }
+}
+
+const handleAddLanguage = (id: number) => {
+  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
+
+  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
+    return
+  }
+
+  selectedLanguages.value.push(language)
+  form.translations![id] = { name: '', description: '' }
+}
+
+const handleRemoveLanguage = (id: number) => {
+  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
+
+  if (form.translations) {
+    delete form.translations[id]
+  }
+}
+
+const getTranslation = (id: number) => {
+  if (!form.translations) {
+    form.translations = {}
+  }
+
+  if (!form.translations[id]) {
+    form.translations[id] = { name: '', description: '' }
+  }
+
+  return form.translations[id]
 }
 
 const handleSubmit = async () => {
@@ -158,7 +207,7 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
-  fetchUnits()
+  fetchCreateData()
 })
 </script>
 
@@ -185,7 +234,12 @@ onMounted(() => {
         </div>
         <div class="space-y-2">
           <Label for="slug">Slug</Label>
-          <Input id="slug" v-model="form.slug" placeholder="termek-001" />
+          <Input
+            id="slug"
+            :model-value="form.slug ?? ''"
+            placeholder="termek-001"
+            @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
+          />
           <InputError :message="errors.slug" />
         </div>
         <div class="space-y-2">
@@ -211,6 +265,37 @@ onMounted(() => {
           <Checkbox id="active" v-model:checked="form.active" />
           <Label for="active">Aktív</Label>
           <InputError :message="errors.active" />
+        </div>
+
+        <div class="space-y-4 border-t pt-4">
+          <h3 class="text-lg font-medium">Fordítások</h3>
+          <TranslationRepeater
+            :languages="selectedLanguages"
+            :available-languages="availableLanguages"
+            @add="handleAddLanguage"
+            @remove="handleRemoveLanguage"
+          >
+            <template #default="{ language }">
+              <div v-if="language.id" class="space-y-4">
+                <div class="space-y-2">
+                  <Label :for="`translation-name-${language.id}`">Név</Label>
+                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id!).name" />
+                  <InputError :message="errors[`translations.${language.id}.name`]" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label :for="`translation-description-${language.id}`">Leírás</Label>
+                  <Textarea
+                    :id="`translation-description-${language.id}`"
+                    :model-value="getTranslation(language.id!).description ?? ''"
+                    rows="4"
+                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
+                  />
+                  <InputError :message="errors[`translations.${language.id}.description`]" />
+                </div>
+              </div>
+            </template>
+          </TranslationRepeater>
         </div>
 
         <div class="space-y-3 border-t pt-4">
@@ -244,13 +329,14 @@ onMounted(() => {
             >
               <div class="flex flex-col gap-3 md:flex-row md:items-start">
                 <div class="h-20 w-20 overflow-hidden rounded border bg-muted">
-                  <img :src="productImage.image_url" alt="" class="h-full w-full object-cover" />
+                  <img :src="productImage.image_url ?? ''" alt="" class="h-full w-full object-cover" />
                 </div>
 
                 <div class="flex-1 space-y-2">
                   <MediaFilePicker
-                    v-model="productImage.image_url"
+                    :model-value="productImage.image_url ?? ''"
                     :accept-types="['image/*']"
+                    @update:model-value="(value) => productImage.image_url = value"
                   />
                   <InputError :message="errors[`product_images.${index}.image_url`]" />
                 </div>

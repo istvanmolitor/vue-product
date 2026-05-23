@@ -3,8 +3,6 @@ import { createApiClient } from '@user/services/apiClient'
 const api = createApiClient()
 
 export interface ProductCategoryTranslation {
-  id: number
-  language_id: number
   name: string
   description?: string | null
 }
@@ -17,7 +15,7 @@ export interface ProductCategory {
   description?: string | null
   image?: string | null
   image_url?: string | null
-  translations?: ProductCategoryTranslation[]
+  translations?: Record<number, ProductCategoryTranslation>
   created_at?: string
   updated_at?: string
 }
@@ -25,7 +23,7 @@ export interface ProductCategory {
 export interface ProductCategoryFormData {
   parent_id?: number | null
   slug?: string | null
-  translations?: Record<number, { name: string; description?: string | null }>
+  translations?: Record<number, ProductCategoryTranslation>
 }
 
 export interface PaginatedResponse<T> {
@@ -45,7 +43,7 @@ export interface SingleResponse<T> {
 export interface Language {
   id: number
   code: string
-  translations?: Array<{ name: string }>
+  name?: string
 }
 
 export interface CreateEditDataResponse {

@@ -3,8 +3,6 @@ import { createApiClient } from '@user/services/apiClient'
 const api = createApiClient()
 
 export interface ProductUnitTranslation {
-  id: number
-  language_id: number
   name: string
   short_name?: string | null
 }
@@ -15,7 +13,7 @@ export interface ProductUnit {
   name?: string
   short_name?: string | null
   enabled?: boolean
-  translations?: ProductUnitTranslation[]
+  translations?: Record<number, ProductUnitTranslation>
   created_at?: string
   updated_at?: string
 }
@@ -23,7 +21,7 @@ export interface ProductUnit {
 export interface ProductUnitFormData {
   code: string
   enabled?: boolean
-  translations?: Record<number, { name: string; short_name?: string | null }>
+  translations?: Record<number, ProductUnitTranslation>
 }
 
 export interface PaginatedResponse<T> {
@@ -68,5 +66,3 @@ export const productUnitService = {
     return api.delete(`/api/admin/product/product-units/${id}`)
   },
 }
-
-

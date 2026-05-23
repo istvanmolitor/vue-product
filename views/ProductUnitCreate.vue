@@ -9,20 +9,76 @@ import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
 import Checkbox from '@admin/components/ui/Checkbox.vue'
+import TranslationRepeater from '@language/components/TranslationRepeater.vue'
+import { languageService, type Language } from '@language/services/languageService'
 import { FormButtons } from '@admin'
 import { useRouter } from 'vue-router'
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { productUnitService, type ProductUnitFormData } from '@product/services/productUnitService'
 
 const router = useRouter()
 const isSaving = ref(false)
+const isLoading = ref(true)
 const errors = ref<Record<string, string[]>>({})
+const availableLanguages = ref<Language[]>([])
+const selectedLanguages = ref<Language[]>([])
 
 const form = reactive<ProductUnitFormData>({
   code: '',
   enabled: true,
   translations: {}
 })
+
+const fetchLanguages = async () => {
+  try {
+    const { data } = await languageService.getCreateData()
+    availableLanguages.value = data.availableLanguages
+    selectedLanguages.value = [...availableLanguages.value]
+    form.translations = {}
+
+    selectedLanguages.value.forEach((language) => {
+      if (language.id) {
+        form.translations![language.id] = { name: '', short_name: '' }
+      }
+    })
+  } catch (error) {
+    console.error('Hiba a nyelvek betöltésekor:', error)
+    toastService.error('Hiba történt a nyelvek betöltésekor.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleAddLanguage = (id: number) => {
+  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
+
+  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
+    return
+  }
+
+  selectedLanguages.value.push(language)
+  form.translations![id] = { name: '', short_name: '' }
+}
+
+const handleRemoveLanguage = (id: number) => {
+  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
+
+  if (form.translations) {
+    delete form.translations[id]
+  }
+}
+
+const getTranslation = (id: number) => {
+  if (!form.translations) {
+    form.translations = {}
+  }
+
+  if (!form.translations[id]) {
+    form.translations[id] = { name: '', short_name: '' }
+  }
+
+  return form.translations[id]
+}
 
 const handleSubmit = async () => {
   try {
@@ -57,6 +113,8 @@ const handleSubmit = async () => {
     isSaving.value = false
   }
 }
+
+onMounted(fetchLanguages)
 </script>
 
 <template>
@@ -65,12 +123,16 @@ const handleSubmit = async () => {
       <BackButton to="/admin/product-unit" />
     </div>
 
-    <Card>
+    <div v-if="isLoading" class="flex justify-center py-8">
+      Betöltés...
+    </div>
+
+    <Card v-else>
       <CardHeader>
         <CardTitle>Mennyiségi egység adatok</CardTitle>
         <CardDescription>Add meg az új mennyiségi egység adatait a létrehozáshoz.</CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
+      <CardContent class="space-y-6">
         <div class="space-y-2">
           <Label for="code">Kód *</Label>
           <Input id="code" v-model="form.code" placeholder="pcs" />
@@ -80,6 +142,36 @@ const handleSubmit = async () => {
           <Checkbox id="enabled" v-model:checked="form.enabled" />
           <Label for="enabled">Engedélyezett</Label>
           <InputError :message="errors.enabled" />
+        </div>
+
+        <div class="space-y-4 border-t pt-4">
+          <h3 class="text-lg font-medium">Fordítások</h3>
+          <TranslationRepeater
+            :languages="selectedLanguages"
+            :available-languages="availableLanguages"
+            @add="handleAddLanguage"
+            @remove="handleRemoveLanguage"
+          >
+            <template #default="{ language }">
+              <div v-if="language.id" class="space-y-4">
+                <div class="space-y-2">
+                  <Label :for="`translation-name-${language.id}`">Név</Label>
+                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id!).name" />
+                  <InputError :message="errors[`translations.${language.id}.name`]" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
+                  <Input
+                    :id="`translation-short-name-${language.id}`"
+                    :model-value="getTranslation(language.id!).short_name ?? ''"
+                    @update:model-value="(value) => getTranslation(language.id!).short_name = String(value)"
+                  />
+                  <InputError :message="errors[`translations.${language.id}.short_name`]" />
+                </div>
+              </div>
+            </template>
+          </TranslationRepeater>
         </div>
       </CardContent>
       <CardFooter>

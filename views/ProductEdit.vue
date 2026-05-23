@@ -152,8 +152,8 @@ const fetchProduct = async () => {
     selectedLanguages.value = []
     form.translations = {}
 
-    ;(data.data.translations ?? []).forEach((translation) => {
-      const languageId = Number(translation.language_id)
+    Object.entries(data.data.translations ?? {}).forEach(([languageIdKey, translation]) => {
+      const languageId = Number(languageIdKey)
       const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === languageId)
 
       if (!language) {

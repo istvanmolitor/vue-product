@@ -8,8 +8,6 @@ export interface ProductUnit {
 }
 
 export interface ProductTranslation {
-  id: number
-  language_id: number
   name: string
   description?: string | null
 }
@@ -32,7 +30,7 @@ export interface Product {
   product_unit_id?: number | null
   product_unit?: ProductUnit
   product_images?: ProductImage[]
-  translations?: ProductTranslation[]
+  translations?: Record<number, ProductTranslation>
   created_at?: string
   updated_at?: string
 }
@@ -44,7 +42,7 @@ export interface ProductFormData {
   active?: boolean
   product_unit_id?: number | null
   product_images?: ProductImage[]
-  translations?: Record<number, { name: string; description?: string | null }>
+  translations?: Record<number, ProductTranslation>
 }
 
 export interface PaginatedResponse<T> {

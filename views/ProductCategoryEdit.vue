@@ -5,9 +5,10 @@ import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
-import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
+import Textarea from '@admin/components/ui/Textarea.vue'
+import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
 import { useRouter, useRoute } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
@@ -19,7 +20,8 @@ const isSaving = ref(false)
 const isLoading = ref(true)
 const errors = ref<Record<string, string[]>>({})
 const parentCategories = ref<Record<string, string>>({})
-const languages = ref<Language[]>([])
+const availableLanguages = ref<Language[]>([])
+const selectedLanguages = ref<Language[]>([])
 const categoryId = route.params.id as string
 
 const form = reactive<ProductCategoryFormData>({
@@ -33,17 +35,25 @@ const fetchEditData = async () => {
     const response = await productCategoryService.getEditData(categoryId)
     const category = response.data.data!
     parentCategories.value = response.data.parent_categories
-    languages.value = response.data.languages
+    availableLanguages.value = response.data.languages
 
     form.parent_id = category.parent_id
     form.slug = category.slug
+    form.translations = {}
+    selectedLanguages.value = []
 
-    // Fordítások betöltése
-    languages.value.forEach(lang => {
-      const translation = category.translations?.find(t => t.language_id === lang.id)
-      form.translations![lang.id] = {
-        name: translation?.name || '',
-        description: translation?.description || ''
+    Object.entries(category.translations ?? {}).forEach(([languageIdKey, translation]) => {
+      const languageId = Number(languageIdKey)
+      const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === languageId)
+
+      if (!language) {
+        return
+      }
+
+      selectedLanguages.value.push(language)
+      form.translations![languageId] = {
+        name: translation.name ?? '',
+        description: translation.description ?? ''
       }
     })
   } catch (error) {
@@ -52,6 +62,37 @@ const fetchEditData = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const handleAddLanguage = (id: number) => {
+  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
+
+  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
+    return
+  }
+
+  selectedLanguages.value.push(language)
+  form.translations![id] = { name: '', description: '' }
+}
+
+const handleRemoveLanguage = (id: number) => {
+  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
+
+  if (form.translations) {
+    delete form.translations[id]
+  }
+}
+
+const getTranslation = (id: number) => {
+  if (!form.translations) {
+    form.translations = {}
+  }
+
+  if (!form.translations[id]) {
+    form.translations[id] = { name: '', description: '' }
+  }
+
+  return form.translations[id]
 }
 
 const handleSubmit = async () => {
@@ -111,32 +152,50 @@ onMounted(fetchEditData)
             </div>
             <div class="space-y-2">
               <Label for="slug">Slug (opcionális)</Label>
-              <Input id="slug" v-model="form.slug" placeholder="kategoria-neve" />
+              <Input
+                id="slug"
+                :model-value="form.slug ?? ''"
+                placeholder="kategoria-neve"
+                @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
+              />
               <InputError :message="errors.slug" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card v-for="lang in languages" :key="lang.id">
+      <Card>
         <CardHeader>
-          <CardTitle>Fordítás: {{ lang.code.toUpperCase() }}</CardTitle>
+          <CardTitle>Fordítások</CardTitle>
         </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <Label :for="'name_' + lang.id">Név *</Label>
-            <Input :id="'name_' + lang.id" v-model="form.translations![lang.id].name" />
-            <InputError :message="errors['translations.' + lang.id + '.name']" />
-          </div>
-          <div class="space-y-2">
-            <Label :for="'description_' + lang.id">Leírás</Label>
-            <textarea
-              :id="'description_' + lang.id"
-              v-model="form.translations![lang.id].description"
-              class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            ></textarea>
-            <InputError :message="errors['translations.' + lang.id + '.description']" />
-          </div>
+        <CardContent>
+          <TranslationRepeater
+            :languages="selectedLanguages"
+            :available-languages="availableLanguages"
+            @add="handleAddLanguage"
+            @remove="handleRemoveLanguage"
+          >
+            <template #default="{ language }">
+              <div v-if="language.id" class="space-y-4">
+                <div class="space-y-2">
+                  <Label :for="`translation-name-${language.id}`">Név *</Label>
+                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id!).name" />
+                  <InputError :message="errors[`translations.${language.id}.name`]" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label :for="`translation-description-${language.id}`">Leírás</Label>
+                  <Textarea
+                    :id="`translation-description-${language.id}`"
+                    :model-value="getTranslation(language.id!).description ?? ''"
+                    rows="4"
+                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
+                  />
+                  <InputError :message="errors[`translations.${language.id}.description`]" />
+                </div>
+              </div>
+            </template>
+          </TranslationRepeater>
         </CardContent>
       </Card>
 

@@ -18,16 +18,15 @@ import { reactive, ref, onMounted } from 'vue'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
-import TranslationRepeater from '@language/components/TranslationRepeater.vue'
-import { languageService, type Language } from '@language/services/languageService'
+import TranslationRepeaterVue from '@language/components/TranslationRepeater.vue'
+
+const TranslationRepeater = TranslationRepeaterVue as any
 
 const router = useRouter()
 const route = useRoute()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
-const availableLanguages = ref<Language[]>([])
-const selectedLanguages = ref<Language[]>([])
 const errors = ref<Record<string, string[]>>({})
 const activeTab = ref('details')
 const productEditTabs = [
@@ -129,10 +128,7 @@ const fetchProduct = async () => {
   try {
     isLoading.value = true
     const productId = route.params.id as string
-    const [productResponse, languagesResponse] = await Promise.all([
-      productService.getEditData(productId),
-      languageService.getCreateData(),
-    ])
+    const productResponse = await productService.getEditData(productId)
 
     const { data } = productResponse
 
@@ -148,24 +144,39 @@ const fetchProduct = async () => {
     }))
     normalizeProductImages()
 
-    availableLanguages.value = languagesResponse.data.availableLanguages
-    selectedLanguages.value = []
-    form.translations = {}
+    const rawTranslations = data.data.translations ?? {}
 
-    Object.entries(data.data.translations ?? {}).forEach(([languageIdKey, translation]) => {
-      const languageId = Number(languageIdKey)
-      const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === languageId)
+    if (Array.isArray(rawTranslations)) {
+      form.translations = rawTranslations.reduce((translations, translation: any) => {
+        const languageId = Number(translation?.language_id)
 
-      if (!language) {
-        return
-      }
+        if (!Number.isFinite(languageId) || languageId <= 0) {
+          return translations
+        }
 
-      selectedLanguages.value.push(language)
-      form.translations![languageId] = {
-        name: translation.name ?? '',
-        description: translation.description ?? '',
-      }
-    })
+        translations[languageId] = {
+          name: translation?.name ?? '',
+          description: translation?.description ?? '',
+        }
+
+        return translations
+      }, {} as NonNullable<ProductFormData['translations']>)
+    } else {
+      form.translations = Object.entries(rawTranslations).reduce((translations, [languageIdKey, translation]: [string, any]) => {
+        const languageId = Number(languageIdKey)
+
+        if (!Number.isFinite(languageId) || languageId <= 0) {
+          return translations
+        }
+
+        translations[languageId] = {
+          name: translation.name ?? '',
+          description: translation.description ?? '',
+        }
+
+        return translations
+      }, {} as NonNullable<ProductFormData['translations']>)
+    }
 
     availableUnits.value = data.product_units
   } catch (error) {
@@ -198,37 +209,6 @@ const handleSubmit = async () => {
   } finally {
     isSaving.value = false
   }
-}
-
-const handleAddLanguage = (id: number) => {
-  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
-
-  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
-    return
-  }
-
-  selectedLanguages.value.push(language)
-  form.translations![id] = { name: '', description: '' }
-}
-
-const handleRemoveLanguage = (id: number) => {
-  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
-
-  if (form.translations) {
-    delete form.translations[id]
-  }
-}
-
-const getTranslation = (id: number) => {
-  if (!form.translations) {
-    form.translations = {}
-  }
-
-  if (!form.translations[id]) {
-    form.translations[id] = { name: '', description: '' }
-  }
-
-  return form.translations[id]
 }
 
 onMounted(() => {
@@ -298,27 +278,20 @@ onMounted(() => {
               <div class="space-y-4 border-t pt-4">
                 <h3 class="text-lg font-medium">Fordítások</h3>
                 <TranslationRepeater
-                  :languages="selectedLanguages"
-                  :available-languages="availableLanguages"
-                  @add="handleAddLanguage"
-                  @remove="handleRemoveLanguage"
+                  v-model="form.translations"
+                  :fields="['name', 'description']"
                 >
-                  <template #default="{ language }">
-                    <div v-if="language.id" class="space-y-4">
+                  <template #default="{ language, translation }">
+                    <div class="space-y-4">
                       <div class="space-y-2">
                         <Label :for="`translation-name-${language.id}`">Név</Label>
-                        <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id).name" />
+                        <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
                         <InputError :message="errors[`translations.${language.id}.name`]" />
                       </div>
 
                       <div class="space-y-2">
                         <Label :for="`translation-description-${language.id}`">Leírás</Label>
-                        <Textarea
-                          :id="`translation-description-${language.id}`"
-                          :model-value="getTranslation(language.id).description ?? ''"
-                          @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
-                          rows="4"
-                        />
+                        <Textarea :id="`translation-description-${language.id}`" v-model="translation.description" rows="4" />
                         <InputError :message="errors[`translations.${language.id}.description`]" />
                       </div>
                     </div>

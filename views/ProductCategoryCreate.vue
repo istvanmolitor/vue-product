@@ -12,15 +12,13 @@ import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
 import { useRouter } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
-import { productCategoryService, type ProductCategoryFormData, type Language } from '@product/services/productCategoryService'
+import { productCategoryService, type ProductCategoryFormData } from '@product/services/productCategoryService'
 
 const router = useRouter()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const errors = ref<Record<string, string[]>>({})
 const parentCategories = ref<Record<string, string>>({})
-const availableLanguages = ref<Language[]>([])
-const selectedLanguages = ref<Language[]>([])
 
 const form = reactive<ProductCategoryFormData>({
   parent_id: null,
@@ -32,49 +30,12 @@ const fetchCreateData = async () => {
   try {
     const response = await productCategoryService.getCreateData()
     parentCategories.value = response.data.parent_categories
-    availableLanguages.value = response.data.languages
-    selectedLanguages.value = [...availableLanguages.value]
-
-    selectedLanguages.value.forEach((language) => {
-      form.translations![language.id] = { name: '', description: '' }
-    })
   } catch (error) {
     console.error('Hiba az adatok betöltésekor:', error)
     toastService.error('Hiba történt az adatok betöltésekor.')
   } finally {
     isLoading.value = false
   }
-}
-
-const handleAddLanguage = (id: number) => {
-  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
-
-  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
-    return
-  }
-
-  selectedLanguages.value.push(language)
-  form.translations![id] = { name: '', description: '' }
-}
-
-const handleRemoveLanguage = (id: number) => {
-  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
-
-  if (form.translations) {
-    delete form.translations[id]
-  }
-}
-
-const getTranslation = (id: number) => {
-  if (!form.translations) {
-    form.translations = {}
-  }
-
-  if (!form.translations[id]) {
-    form.translations[id] = { name: '', description: '' }
-  }
-
-  return form.translations[id]
 }
 
 const handleSubmit = async () => {
@@ -165,28 +126,18 @@ onMounted(fetchCreateData)
           <CardTitle>Fordítások</CardTitle>
         </CardHeader>
         <CardContent>
-          <TranslationRepeater
-            :languages="selectedLanguages"
-            :available-languages="availableLanguages"
-            @add="handleAddLanguage"
-            @remove="handleRemoveLanguage"
-          >
-            <template #default="{ language }">
-              <div v-if="language.id" class="space-y-4">
+          <TranslationRepeater v-model="form.translations" :fields="['name', 'description']">
+            <template #default="{ language, translation }">
+              <div class="space-y-4">
                 <div class="space-y-2">
                   <Label :for="`translation-name-${language.id}`">Név *</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id!).name" />
+                  <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
                   <InputError :message="errors[`translations.${language.id}.name`]" />
                 </div>
 
                 <div class="space-y-2">
                   <Label :for="`translation-description-${language.id}`">Leírás</Label>
-                  <Textarea
-                    :id="`translation-description-${language.id}`"
-                    :model-value="getTranslation(language.id!).description ?? ''"
-                    rows="4"
-                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
-                  />
+                  <Textarea :id="`translation-description-${language.id}`" v-model="translation.description" rows="4" />
                   <InputError :message="errors[`translations.${language.id}.description`]" />
                 </div>
               </div>

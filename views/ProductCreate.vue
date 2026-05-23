@@ -18,14 +18,11 @@ import { reactive, ref, onMounted } from 'vue'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
-import { languageService, type Language } from '@language/services/languageService'
 
 const router = useRouter()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
-const availableLanguages = ref<Language[]>([])
-const selectedLanguages = ref<Language[]>([])
 const errors = ref<Record<string, string[]>>({})
 
 const form = reactive<ProductFormData>({
@@ -115,58 +112,15 @@ const setMainProductImage = (index: number) => {
 const fetchCreateData = async () => {
   try {
     isLoading.value = true
-    const [productsResponse, languagesResponse] = await Promise.all([
-      productService.getCreateData(),
-      languageService.getCreateData(),
-    ])
+    const productsResponse = await productService.getCreateData()
 
     availableUnits.value = productsResponse.data.product_units
-    availableLanguages.value = languagesResponse.data.availableLanguages
-    selectedLanguages.value = [...availableLanguages.value]
-    form.translations = {}
-
-    selectedLanguages.value.forEach((language) => {
-      if (language.id) {
-        form.translations![language.id] = { name: '', description: '' }
-      }
-    })
   } catch (error) {
     console.error('Hiba a mértékegységek betöltésekor:', error)
     toastService.error('Hiba történt az adatok betöltésekor.')
   } finally {
     isLoading.value = false
   }
-}
-
-const handleAddLanguage = (id: number) => {
-  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
-
-  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
-    return
-  }
-
-  selectedLanguages.value.push(language)
-  form.translations![id] = { name: '', description: '' }
-}
-
-const handleRemoveLanguage = (id: number) => {
-  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
-
-  if (form.translations) {
-    delete form.translations[id]
-  }
-}
-
-const getTranslation = (id: number) => {
-  if (!form.translations) {
-    form.translations = {}
-  }
-
-  if (!form.translations[id]) {
-    form.translations[id] = { name: '', description: '' }
-  }
-
-  return form.translations[id]
 }
 
 const handleSubmit = async () => {
@@ -270,27 +224,20 @@ onMounted(() => {
         <div class="space-y-4 border-t pt-4">
           <h3 class="text-lg font-medium">Fordítások</h3>
           <TranslationRepeater
-            :languages="selectedLanguages"
-            :available-languages="availableLanguages"
-            @add="handleAddLanguage"
-            @remove="handleRemoveLanguage"
+            v-model="form.translations"
+            :fields="['name', 'description']"
           >
-            <template #default="{ language }">
-              <div v-if="language.id" class="space-y-4">
+            <template #default="{ language, translation }">
+              <div class="space-y-4">
                 <div class="space-y-2">
                   <Label :for="`translation-name-${language.id}`">Név</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id!).name" />
+                  <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
                   <InputError :message="errors[`translations.${language.id}.name`]" />
                 </div>
 
                 <div class="space-y-2">
                   <Label :for="`translation-description-${language.id}`">Leírás</Label>
-                  <Textarea
-                    :id="`translation-description-${language.id}`"
-                    :model-value="getTranslation(language.id!).description ?? ''"
-                    rows="4"
-                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
-                  />
+                  <Textarea :id="`translation-description-${language.id}`" v-model="translation.description" rows="4" />
                   <InputError :message="errors[`translations.${language.id}.description`]" />
                 </div>
               </div>

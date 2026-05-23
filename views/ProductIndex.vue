@@ -19,7 +19,6 @@ const pagination = ref<PaginationMeta>({
 })
 
 const columns: Column<Product>[] = [
-  { key: 'id', label: 'ID', sortable: true, width: '80px' },
   { key: 'sku', label: 'SKU', sortable: true },
   { key: 'name', label: 'Név', sortable: true },
   { key: 'price', label: 'Ár', sortable: true, width: '120px' },

@@ -9,6 +9,7 @@ import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
 import Checkbox from '@admin/components/ui/Checkbox.vue'
+import Tabs from '@admin/components/ui/Tabs.vue'
 import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import { FormButtons } from '@admin'
@@ -28,6 +29,17 @@ const availableUnits = ref<ProductUnit[]>([])
 const availableLanguages = ref<Language[]>([])
 const selectedLanguages = ref<Language[]>([])
 const errors = ref<Record<string, string[]>>({})
+const activeTab = ref('details')
+const productEditTabs = [
+  {
+    key: 'details',
+    label: 'Termék adatai',
+  },
+  {
+    key: 'images',
+    label: 'Termék képei',
+  },
+]
 
 const form = reactive<ProductFormData>({
   sku: '',
@@ -236,141 +248,153 @@ onMounted(() => {
 
     <Card v-else>
       <CardHeader>
-        <CardTitle>Termék adatok</CardTitle>
+        <CardTitle>Termék szerkesztése</CardTitle>
         <CardDescription>Frissítsd a termék adatait.</CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
-        <div class="space-y-2">
-          <Label for="sku">SKU *</Label>
-          <Input id="sku" v-model="form.sku" placeholder="PROD-001" />
-          <InputError :message="errors.sku" />
-        </div>
-        <div class="space-y-2">
-          <Label for="slug">Slug</Label>
-          <Input id="slug" v-model="form.slug" placeholder="termek-001" />
-          <InputError :message="errors.slug" />
-        </div>
-        <div class="space-y-2">
-          <Label for="price">Ár</Label>
-          <Input id="price" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" />
-          <InputError :message="errors.price" />
-        </div>
-        <div class="space-y-2">
-          <Label for="product_unit_id">Mértékegység</Label>
-          <select
-            id="product_unit_id"
-            v-model="form.product_unit_id"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option :value="null">Nincs kiválasztva</option>
-            <option v-for="unit in availableUnits" :key="unit.id" :value="unit.id">
-              {{ unit.name }}
-            </option>
-          </select>
-          <InputError :message="errors.product_unit_id" />
-        </div>
-        <div class="flex items-center space-x-2">
-          <Checkbox id="active" v-model:checked="form.active" />
-          <Label for="active">Aktív</Label>
-          <InputError :message="errors.active" />
-        </div>
-
-        <div class="space-y-4 border-t pt-4">
-          <h3 class="text-lg font-medium">Fordítások</h3>
-          <TranslationRepeater
-            :languages="selectedLanguages"
-            :available-languages="availableLanguages"
-            @add="handleAddLanguage"
-            @remove="handleRemoveLanguage"
-          >
-            <template #default="{ language }">
-              <div v-if="language.id" class="space-y-4">
-                <div class="space-y-2">
-                  <Label :for="`translation-name-${language.id}`">Név</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id).name" />
-                  <InputError :message="errors[`translations.${language.id}.name`]" />
-                </div>
-
-                <div class="space-y-2">
-                  <Label :for="`translation-description-${language.id}`">Leírás</Label>
-                  <Textarea
-                    :id="`translation-description-${language.id}`"
-                    :model-value="getTranslation(language.id).description ?? ''"
-                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
-                    rows="4"
-                  />
-                  <InputError :message="errors[`translations.${language.id}.description`]" />
-                </div>
+      <CardContent>
+        <Tabs v-model="activeTab" :items="productEditTabs">
+          <template #default="{ activeKey }">
+            <div v-if="activeKey === 'details'" class="space-y-4">
+              <div class="space-y-2">
+                <Label for="sku">SKU *</Label>
+                <Input id="sku" v-model="form.sku" placeholder="PROD-001" />
+                <InputError :message="errors.sku" />
               </div>
-            </template>
-          </TranslationRepeater>
-        </div>
+              <div class="space-y-2">
+                <Label for="slug">Slug</Label>
+                <Input
+                  id="slug"
+                  :model-value="form.slug ?? ''"
+                  placeholder="termek-001"
+                  @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
+                />
+                <InputError :message="errors.slug" />
+              </div>
+              <div class="space-y-2">
+                <Label for="price">Ár</Label>
+                <Input id="price" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" />
+                <InputError :message="errors.price" />
+              </div>
+              <div class="space-y-2">
+                <Label for="product_unit_id">Mértékegység</Label>
+                <select
+                  id="product_unit_id"
+                  v-model="form.product_unit_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option :value="null">Nincs kiválasztva</option>
+                  <option v-for="unit in availableUnits" :key="unit.id" :value="unit.id">
+                    {{ unit.name }}
+                  </option>
+                </select>
+                <InputError :message="errors.product_unit_id" />
+              </div>
+              <div class="flex items-center space-x-2">
+                <Checkbox id="active" v-model:checked="form.active" />
+                <Label for="active">Aktív</Label>
+                <InputError :message="errors.active" />
+              </div>
 
-        <div class="space-y-3 border-t pt-4">
-          <div class="flex items-center justify-between">
-            <Label class="text-sm font-medium">Termék képek</Label>
-            <MediaFilePicker
-              :show-preview="false"
-              :accept-types="['image/*']"
-              @select="addProductImage"
-            >
-              <template #default>
-                <Button type="button" variant="outline" size="sm">
-                  <Icon name="plus" :size="16" class="mr-2" />
-                  Kép hozzáadása
-                </Button>
-              </template>
-            </MediaFilePicker>
-          </div>
+              <div class="space-y-4 border-t pt-4">
+                <h3 class="text-lg font-medium">Fordítások</h3>
+                <TranslationRepeater
+                  :languages="selectedLanguages"
+                  :available-languages="availableLanguages"
+                  @add="handleAddLanguage"
+                  @remove="handleRemoveLanguage"
+                >
+                  <template #default="{ language }">
+                    <div v-if="language.id" class="space-y-4">
+                      <div class="space-y-2">
+                        <Label :for="`translation-name-${language.id}`">Név</Label>
+                        <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id).name" />
+                        <InputError :message="errors[`translations.${language.id}.name`]" />
+                      </div>
 
-          <InputError :message="errors.product_images" />
+                      <div class="space-y-2">
+                        <Label :for="`translation-description-${language.id}`">Leírás</Label>
+                        <Textarea
+                          :id="`translation-description-${language.id}`"
+                          :model-value="getTranslation(language.id).description ?? ''"
+                          @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
+                          rows="4"
+                        />
+                        <InputError :message="errors[`translations.${language.id}.description`]" />
+                      </div>
+                    </div>
+                  </template>
+                </TranslationRepeater>
+              </div>
+            </div>
 
-          <div v-if="(form.product_images?.length ?? 0) === 0" class="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
-            Még nincs termékkép.
-          </div>
+            <div v-else-if="activeKey === 'images'" class="space-y-3">
+              <div class="flex items-center justify-between">
+                <Label class="text-sm font-medium">Termék képek</Label>
+                <MediaFilePicker
+                  :show-preview="false"
+                  :accept-types="['image/*']"
+                  @select="addProductImage"
+                >
+                  <template #default>
+                    <Button type="button" variant="outline" size="sm">
+                      <Icon name="plus" :size="16" class="mr-2" />
+                      Kép hozzáadása
+                    </Button>
+                  </template>
+                </MediaFilePicker>
+              </div>
 
-          <div v-else class="space-y-3">
-            <div
-              v-for="(productImage, index) in form.product_images"
-              :key="`${index}-${productImage.image_url}`"
-              class="rounded-md border p-3"
-            >
-              <div class="flex flex-col gap-3 md:flex-row md:items-start">
-                <div class="h-20 w-20 overflow-hidden rounded border bg-muted">
-                  <img :src="productImage.image_url" alt="" class="h-full w-full object-cover" />
-                </div>
+              <InputError :message="errors.product_images" />
 
-                <div class="flex-1 space-y-2">
-                  <MediaFilePicker
-                    v-model="productImage.image_url"
-                    :accept-types="['image/*']"
-                  />
-                  <InputError :message="errors[`product_images.${index}.image_url`]" />
-                </div>
+              <div v-if="(form.product_images?.length ?? 0) === 0" class="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                Még nincs termékkép.
+              </div>
 
-                <div class="flex items-center gap-3">
-                  <label class="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      :checked="productImage.is_main === true"
-                      @change="setMainProductImage(index)"
-                    />
-                    Főkép
-                  </label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    class="text-destructive hover:text-destructive"
-                    @click="removeProductImage(index)"
-                  >
-                    <Icon name="delete" :size="16" />
-                  </Button>
+              <div v-else class="space-y-3">
+                <div
+                  v-for="(productImage, index) in form.product_images"
+                  :key="`${index}-${productImage.image_url}`"
+                  class="rounded-md border p-3"
+                >
+                  <div class="flex flex-col gap-3 md:flex-row md:items-start">
+                    <div class="h-20 w-20 overflow-hidden rounded border bg-muted">
+                      <img :src="productImage.image_url ?? ''" alt="" class="h-full w-full object-cover" />
+                    </div>
+
+                    <div class="flex-1 space-y-2">
+                      <MediaFilePicker
+                        :model-value="productImage.image_url ?? ''"
+                        :accept-types="['image/*']"
+                        @update:model-value="(value) => productImage.image_url = value"
+                      />
+                      <InputError :message="errors[`product_images.${index}.image_url`]" />
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                      <label class="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          :checked="productImage.is_main === true"
+                          @change="setMainProductImage(index)"
+                        />
+                        Főkép
+                      </label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        class="text-destructive hover:text-destructive"
+                        @click="removeProductImage(index)"
+                      >
+                        <Icon name="delete" :size="16" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </Tabs>
       </CardContent>
       <CardFooter>
         <FormButtons

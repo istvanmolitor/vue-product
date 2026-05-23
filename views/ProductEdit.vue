@@ -16,12 +16,17 @@ import { useRouter, useRoute } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
+import Textarea from '@admin/components/ui/Textarea.vue'
+import TranslationRepeater from '@language/components/TranslationRepeater.vue'
+import { languageService, type Language } from '@language/services/languageService'
 
 const router = useRouter()
 const route = useRoute()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
+const availableLanguages = ref<Language[]>([])
+const selectedLanguages = ref<Language[]>([])
 const errors = ref<Record<string, string[]>>({})
 
 const form = reactive<ProductFormData>({
@@ -112,7 +117,12 @@ const fetchProduct = async () => {
   try {
     isLoading.value = true
     const productId = route.params.id as string
-    const { data } = await productService.getEditData(productId)
+    const [productResponse, languagesResponse] = await Promise.all([
+      productService.getEditData(productId),
+      languageService.getCreateData(),
+    ])
+
+    const { data } = productResponse
 
     form.sku = data.data.sku
     form.slug = data.data.slug
@@ -125,6 +135,25 @@ const fetchProduct = async () => {
       sort: productImage.sort ?? index
     }))
     normalizeProductImages()
+
+    availableLanguages.value = languagesResponse.data.availableLanguages
+    selectedLanguages.value = []
+    form.translations = {}
+
+    ;(data.data.translations ?? []).forEach((translation) => {
+      const languageId = Number(translation.language_id)
+      const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === languageId)
+
+      if (!language) {
+        return
+      }
+
+      selectedLanguages.value.push(language)
+      form.translations![languageId] = {
+        name: translation.name ?? '',
+        description: translation.description ?? '',
+      }
+    })
 
     availableUnits.value = data.product_units
   } catch (error) {
@@ -157,6 +186,37 @@ const handleSubmit = async () => {
   } finally {
     isSaving.value = false
   }
+}
+
+const handleAddLanguage = (id: number) => {
+  const language = availableLanguages.value.find((availableLanguage) => availableLanguage.id === id)
+
+  if (!language || selectedLanguages.value.some((selectedLanguage) => selectedLanguage.id === id)) {
+    return
+  }
+
+  selectedLanguages.value.push(language)
+  form.translations![id] = { name: '', description: '' }
+}
+
+const handleRemoveLanguage = (id: number) => {
+  selectedLanguages.value = selectedLanguages.value.filter((language) => language.id !== id)
+
+  if (form.translations) {
+    delete form.translations[id]
+  }
+}
+
+const getTranslation = (id: number) => {
+  if (!form.translations) {
+    form.translations = {}
+  }
+
+  if (!form.translations[id]) {
+    form.translations[id] = { name: '', description: '' }
+  }
+
+  return form.translations[id]
 }
 
 onMounted(() => {
@@ -213,6 +273,37 @@ onMounted(() => {
           <Checkbox id="active" v-model:checked="form.active" />
           <Label for="active">Aktív</Label>
           <InputError :message="errors.active" />
+        </div>
+
+        <div class="space-y-4 border-t pt-4">
+          <h3 class="text-lg font-medium">Fordítások</h3>
+          <TranslationRepeater
+            :languages="selectedLanguages"
+            :available-languages="availableLanguages"
+            @add="handleAddLanguage"
+            @remove="handleRemoveLanguage"
+          >
+            <template #default="{ language }">
+              <div v-if="language.id" class="space-y-4">
+                <div class="space-y-2">
+                  <Label :for="`translation-name-${language.id}`">Név</Label>
+                  <Input :id="`translation-name-${language.id}`" v-model="getTranslation(language.id).name" />
+                  <InputError :message="errors[`translations.${language.id}.name`]" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label :for="`translation-description-${language.id}`">Leírás</Label>
+                  <Textarea
+                    :id="`translation-description-${language.id}`"
+                    :model-value="getTranslation(language.id).description ?? ''"
+                    @update:model-value="(value) => getTranslation(language.id!).description = String(value)"
+                    rows="4"
+                  />
+                  <InputError :message="errors[`translations.${language.id}.description`]" />
+                </div>
+              </div>
+            </template>
+          </TranslationRepeater>
         </div>
 
         <div class="space-y-3 border-t pt-4">

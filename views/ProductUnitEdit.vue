@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AdminLayout, BackButton, toastService, InputError } from '@admin'
+import { AdminLayout, BackButton, toastService, InputError, LoadingSpinner } from '@admin'
 import Label from '@admin/components/ui/Label.vue'
 import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
@@ -78,9 +78,7 @@ onMounted(() => {
       <BackButton to="/admin/product-unit" />
     </div>
 
-    <div v-if="isLoading" class="flex justify-center py-8">
-      Betöltés...
-    </div>
+    <div v-if="isLoading" class="flex justify-center py-8"><LoadingSpinner label="Betöltés..." /></div>
 
     <Card v-else>
       <CardHeader>

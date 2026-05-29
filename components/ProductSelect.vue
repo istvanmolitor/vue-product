@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import Modal from '@admin/components/ui/Modal.vue'
+import Icon from '@admin/components/ui/Icon.vue'
 import { productService, type Product } from '../services/productService'
 
 type ProductSelectOption = Omit<Product, 'id'> & {
@@ -287,20 +288,12 @@ const clearSelection = (): void => {
             />
             <span v-else class="h-10 w-10 shrink-0 rounded bg-muted" />
 
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-xs text-muted-foreground">{{ product.sku }}</span>
-              <span class="block truncate font-medium">{{ product.name }}</span>
-            </span>
+             <span class="min-w-0 flex-1">
+               <span class="block truncate text-xs text-muted-foreground">{{ product.sku }}</span>
+               <span class="block truncate font-medium">{{ product.name }}</span>
+             </span>
 
-            <svg
-              v-if="modelValue === product.id"
-              class="h-4 w-4 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+             <Icon v-if="modelValue === product.id" name="check" class="h-4 w-4 shrink-0" />
           </button>
         </div>
       </div>

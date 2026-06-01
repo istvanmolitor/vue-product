@@ -23,27 +23,31 @@ export class ProductMenuBuilder extends MenuBuilder {
       title: 'Termékek',
       icon: ShoppingBag,
       order: 30,
+      permission: ['product', 'product_unit'],
       children: [
         {
           id: 'products',
           title: 'Termékek',
           path: '/admin/product',
           icon: ShoppingBag,
-          order: 10
+          order: 10,
+          permission: 'product'
         },
         {
           id: 'product-categories',
           title: 'Kategóriák',
           path: '/admin/product-category',
           icon: Layers,
-          order: 15
+          order: 15,
+          permission: 'product'
         },
         {
           id: 'product-units',
           title: 'Mennyiségi egységek',
           path: '/admin/product-unit',
           icon: Package,
-          order: 20
+          order: 20,
+          permission: 'product_unit'
         }
       ]
     }

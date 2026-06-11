@@ -28,6 +28,7 @@ export interface Product {
   price?: number
   active?: boolean
   product_unit_id?: number | null
+  product_category_ids?: number[]
   product_unit?: ProductUnit
   product_images?: ProductImage[]
   translations?: Record<number, ProductTranslation>
@@ -41,6 +42,7 @@ export interface ProductFormData {
   price?: number
   active?: boolean
   product_unit_id?: number | null
+  product_category_ids?: number[]
   product_images?: ProductImage[]
   translations?: Record<number, ProductTranslation>
 }

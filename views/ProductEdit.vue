@@ -17,6 +17,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
 import { normalizeTranslations } from '@language'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
+import ProductCategorySelect from '@product/components/ProductCategorySelect.vue'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import TranslationRepeaterVue from '@language/components/TranslationRepeater.vue'
@@ -47,6 +48,7 @@ const form = reactive<ProductFormData>({
   price: 0,
   active: false,
   product_unit_id: null,
+  product_category_ids: [],
   product_images: [],
   translations: {}
 })
@@ -138,6 +140,7 @@ const fetchProduct = async () => {
     form.price = data.data.price || 0
     form.active = data.data.active || false
     form.product_unit_id = data.data.product_unit_id
+    form.product_category_ids = data.data.product_category_ids ?? []
     form.product_images = (data.data.product_images ?? []).map((productImage, index) => ({
       image_url: productImage.image_url ?? '',
       is_main: productImage.is_main ?? false,
@@ -236,6 +239,11 @@ onMounted(() => {
                   </option>
                 </select>
                 <InputError :message="errors.product_unit_id" />
+              </div>
+              <div class="space-y-2">
+                <Label for="product_category_ids">Kategóriák</Label>
+                <ProductCategorySelect id="product_category_ids" v-model="form.product_category_ids" />
+                <InputError :message="errors.product_category_ids" />
               </div>
               <div class="flex items-center space-x-2">
                 <Checkbox id="active" v-model:checked="form.active" />

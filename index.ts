@@ -14,3 +14,4 @@ export { ProductMenuBuilder, productMenuBuilder } from './config/menuBuilder'
 
 // Components
 export { default as ProductSelect } from './components/ProductSelect.vue'
+export { default as ProductCategorySelect } from './components/ProductCategorySelect.vue'

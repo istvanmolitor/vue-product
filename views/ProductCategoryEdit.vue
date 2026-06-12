@@ -7,6 +7,7 @@ import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
+import ProductCategoryParentSelect from '@product/components/ProductCategoryParentSelect.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import { normalizeTranslations } from '@language'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
@@ -87,16 +88,7 @@ onMounted(fetchEditData)
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label for="parent_id">Szülő kategória</Label>
-              <select
-                id="parent_id"
-                v-model="form.parent_id"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option :value="null">Nincs (Főkategória)</option>
-                <option v-for="(name, id) in parentCategories" :key="id" :value="id">
-                  {{ name }}
-                </option>
-              </select>
+              <ProductCategoryParentSelect id="parent_id" v-model="form.parent_id" :options="parentCategories" />
               <InputError :message="errors.parent_id" />
             </div>
             <div class="space-y-2">

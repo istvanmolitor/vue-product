@@ -214,7 +214,7 @@ onMounted(() => {
           <InputError :message="errors.product_unit_id" />
         </div>
         <div class="flex items-center space-x-2">
-          <Checkbox id="active" v-model:checked="form.active" />
+          <Checkbox id="active" v-model="form.active" />
           <Label for="active">Aktív</Label>
           <InputError :message="errors.active" />
         </div>

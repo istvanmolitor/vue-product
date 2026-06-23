@@ -397,7 +397,6 @@ const saveSelection = (): void => {
             >
               <Checkbox
                 :model-value="isSelectedInDraft(item.id as number)"
-                @update:model-value="() => toggleCategory(item.id as number)"
               />
               <span class="truncate text-sm">{{ item.name }}</span>
             </button>

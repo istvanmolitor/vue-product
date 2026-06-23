@@ -78,7 +78,7 @@ const handleSubmit = async () => {
           <InputError :message="errors.code" />
         </div>
         <div class="flex items-center space-x-2">
-          <Checkbox id="enabled" v-model:checked="form.enabled" />
+          <Checkbox id="enabled" v-model="form.enabled" />
           <Label for="enabled">Engedélyezett</Label>
           <InputError :message="errors.enabled" />
         </div>

@@ -278,7 +278,7 @@ onMounted(() => {
 
             <div v-else-if="activeKey === 'images'" class="space-y-3">
               <div class="flex items-center justify-between">
-                <Label class="text-sm font-medium">Termék képek</Label>
+                <Label>Termék képek</Label>
                 <MediaFilePicker
                   :show-preview="false"
                   :accept-types="['image/*']"

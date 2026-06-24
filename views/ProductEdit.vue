@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AdminLayout, BackButton, toastService, InputError, LoadingSpinner } from '@admin'
+import InputField from '@admin/components/ui/InputField.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
@@ -206,11 +207,7 @@ onMounted(() => {
         <Tabs v-model="activeTab" :items="productEditTabs">
           <template #default="{ activeKey }">
             <div v-if="activeKey === 'details'" class="space-y-4">
-              <div class="space-y-2">
-                <Label for="sku">SKU *</Label>
-                <Input id="sku" v-model="form.sku" placeholder="PROD-001" />
-                <InputError :message="errors.sku" />
-              </div>
+              <InputField id="sku" label="SKU" v-model="form.sku" placeholder="PROD-001" :required="true" :errors="errors.sku" />
               <div class="space-y-2">
                 <Label for="slug">Slug</Label>
                 <Input

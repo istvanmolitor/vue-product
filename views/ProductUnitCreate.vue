@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AdminLayout, BackButton, toastService, InputError } from '@admin'
+import InputField from '@admin/components/ui/InputField.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
@@ -72,11 +73,7 @@ const handleSubmit = async () => {
         <CardDescription>Add meg az új mennyiségi egység adatait a létrehozáshoz.</CardDescription>
       </CardHeader>
       <CardContent class="space-y-6">
-        <div class="space-y-2">
-          <Label for="code">Kód *</Label>
-          <Input id="code" v-model="form.code" placeholder="pcs" />
-          <InputError :message="errors.code" />
-        </div>
+        <InputField id="code" label="Kód" v-model="form.code" placeholder="pcs" :required="true" :errors="errors.code" />
         <div class="flex items-center space-x-2">
           <Checkbox id="enabled" v-model="form.enabled" />
           <Label for="enabled">Engedélyezett</Label>

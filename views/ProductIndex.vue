@@ -18,12 +18,7 @@ const pagination = ref<PaginationMeta>({
   total: 0
 })
 
-const columns: Column<Product>[] = [
-  { key: 'sku', label: 'SKU', sortable: true },
-  { key: 'name', label: 'Név', sortable: true },
-  { key: 'price', label: 'Ár', sortable: true, width: '120px' },
-  { key: 'active', label: 'Státusz', sortable: false, width: '120px' },
-]
+const columns = ref<Column[]>([])
 
 const fetchProducts = async (params: {
   search?: string
@@ -36,6 +31,7 @@ const fetchProducts = async (params: {
     const response = await productService.getAll(params)
     products.value = response.data.data
     pagination.value = response.data.meta
+    columns.value = (response.data.columns ?? []) as Column[]
   } catch (error) {
     console.error('Hiba a termékek betöltésekor:', error)
     toastService.error('Hiba történt a termékek betöltésekor.')

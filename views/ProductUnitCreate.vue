@@ -80,29 +80,26 @@ const handleSubmit = async () => {
           <InputError :message="errors.enabled" />
         </div>
 
-        <div class="space-y-4 border-t pt-4">
-          <h3 class="text-lg font-medium">Fordítások</h3>
-          <TranslationRepeater
-            v-model="form.translations"
-            :fields="['name', 'short_name']"
-          >
-            <template #default="{ language, translation }">
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label :for="`translation-name-${language.id}`">Név</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-                  <InputError :message="errors[`translations.${language.id}.name`]" />
-                </div>
-
-                <div class="space-y-2">
-                  <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
-                  <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
-                  <InputError :message="errors[`translations.${language.id}.short_name`]" />
-                </div>
+        <TranslationRepeater
+          v-model="form.translations"
+          :fields="['name', 'short_name']"
+        >
+          <template #default="{ language, translation }">
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <Label :for="`translation-name-${language.id}`">Név</Label>
+                <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
+                <InputError :message="errors[`translations.${language.id}.name`]" />
               </div>
-            </template>
-          </TranslationRepeater>
-        </div>
+
+              <div class="space-y-2">
+                <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
+                <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
+                <InputError :message="errors[`translations.${language.id}.short_name`]" />
+              </div>
+            </div>
+          </template>
+        </TranslationRepeater>
       </CardContent>
       <CardFooter>
         <FormButtons

@@ -119,30 +119,23 @@ onMounted(fetchCreateData)
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Fordítások</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TranslationRepeater v-model="form.translations" :fields="['name', 'description']">
-            <template #default="{ language, translation }">
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label :for="`translation-name-${language.id}`">Név *</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-                  <InputError :message="errors[`translations.${language.id}.name`]" />
-                </div>
+      <TranslationRepeater v-model="form.translations" :fields="['name', 'description']">
+        <template #default="{ language, translation }">
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label :for="`translation-name-${language.id}`">Név *</Label>
+              <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
+              <InputError :message="errors[`translations.${language.id}.name`]" />
+            </div>
 
-                <div class="space-y-2">
-                  <Label :for="`translation-description-${language.id}`">Leírás</Label>
-                  <Textarea :id="`translation-description-${language.id}`" v-model="translation.description" rows="4" />
-                  <InputError :message="errors[`translations.${language.id}.description`]" />
-                </div>
-              </div>
-            </template>
-          </TranslationRepeater>
-        </CardContent>
-      </Card>
+            <div class="space-y-2">
+              <Label :for="`translation-description-${language.id}`">Leírás</Label>
+              <Textarea :id="`translation-description-${language.id}`" v-model="translation.description" rows="4" />
+              <InputError :message="errors[`translations.${language.id}.description`]" />
+            </div>
+          </div>
+        </template>
+      </TranslationRepeater>
 
       <div class="flex justify-end">
         <FormButtons

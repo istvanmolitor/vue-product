@@ -88,24 +88,21 @@ onMounted(() => {
         <InputField id="code" label="Kód" v-model="form.code" placeholder="pcs" :required="true" :errors="errors.code" />
         <CheckboxField id="enabled" label="Engedélyezett" v-model="form.enabled" :errors="errors.enabled" />
 
-        <div class="space-y-4 border-t pt-4">
-          <h3 class="text-lg font-medium">Fordítások</h3>
-          <TranslationRepeater v-model="form.translations" #default="{ language, translation }" :fields="['name', 'short_name']">
-                <InputField
-                  :id="`translation-name-${language.id}`"
-                  label="Név"
-                  v-model="translation.name"
-                  :errors="errors[`translations.${language.id}.name`]"
-                />
+        <TranslationRepeater v-model="form.translations" #default="{ language, translation }" :fields="['name', 'short_name']">
+          <InputField
+            :id="`translation-name-${language.id}`"
+            label="Név"
+            v-model="translation.name"
+            :errors="errors[`translations.${language.id}.name`]"
+          />
 
-                <InputField
-                  :id="`translation-short-name-${language.id}`"
-                  label="Rövid név"
-                  v-model="translation.short_name"
-                  :errors="errors[`translations.${language.id}.short_name`]"
-                />
-          </TranslationRepeater>
-        </div>
+          <InputField
+            :id="`translation-short-name-${language.id}`"
+            label="Rövid név"
+            v-model="translation.short_name"
+            :errors="errors[`translations.${language.id}.short_name`]"
+          />
+        </TranslationRepeater>
       </CardContent>
       <CardFooter>
         <FormButtons

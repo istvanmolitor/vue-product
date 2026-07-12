@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { AdminLayout, BackButton, toastService, InputError } from '@admin'
+import { AdminLayout, BackButton, toastService } from '@admin'
 import InputField from '@admin/components/ui/InputField.vue'
-import Label from '@admin/components/ui/Label.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
 import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
-import Checkbox from '@admin/components/ui/Checkbox.vue'
+import CheckboxField from '@admin/components/ui/CheckboxField.vue'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
 import { useRouter } from 'vue-router'
@@ -73,11 +72,7 @@ const handleSubmit = async () => {
       </CardHeader>
       <CardContent class="space-y-6">
         <InputField id="code" label="Kód" v-model="form.code" placeholder="pcs" :required="true" :errors="errors.code" />
-        <div class="flex items-center space-x-2">
-          <Checkbox id="enabled" v-model="form.enabled" />
-          <Label for="enabled">Engedélyezett</Label>
-          <InputError :message="errors.enabled" />
-        </div>
+        <CheckboxField id="enabled" label="Engedélyezett" v-model="form.enabled" :errors="errors.enabled" />
 
         <TranslationRepeater
           v-model="form.translations"

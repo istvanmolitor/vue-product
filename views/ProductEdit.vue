@@ -8,7 +8,7 @@ import CardDescription from '@admin/components/ui/CardDescription.vue'
 import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
-import Checkbox from '@admin/components/ui/Checkbox.vue'
+import CheckboxField from '@admin/components/ui/CheckboxField.vue'
 import Tabs from '@admin/components/ui/Tabs.vue'
 import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
@@ -235,11 +235,7 @@ onMounted(() => {
                 <ProductCategorySelect id="product_category_ids" v-model="form.product_category_ids" />
                 <InputError :message="errors.product_category_ids" />
               </div>
-              <div class="flex items-center space-x-2">
-                <Checkbox id="active" v-model="form.active" />
-                <Label for="active">Aktív</Label>
-                <InputError :message="errors.active" />
-              </div>
+              <CheckboxField id="active" label="Aktív" v-model="form.active" :errors="errors.active" />
 
               <TranslationRepeater
                 v-model="form.translations"

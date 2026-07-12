@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AdminLayout, BackButton, toastService, InputError, LoadingSpinner } from '@admin'
+import InputField from '@admin/components/ui/InputField.vue'
 import Label from '@admin/components/ui/Label.vue'
-import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
@@ -91,16 +91,14 @@ onMounted(fetchEditData)
               <ProductCategoryParentSelect id="parent_id" v-model="form.parent_id" :options="parentCategories" />
               <InputError :message="errors.parent_id" />
             </div>
-            <div class="space-y-2">
-              <Label for="slug">Slug (opcionális)</Label>
-              <Input
-                id="slug"
-                :model-value="form.slug ?? ''"
-                placeholder="kategoria-neve"
-                @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
-              />
-              <InputError :message="errors.slug" />
-            </div>
+            <InputField
+              id="slug"
+              label="Slug (opcionális)"
+              :model-value="form.slug ?? ''"
+              placeholder="kategoria-neve"
+              @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
+              :errors="errors.slug"
+            />
           </div>
         </CardContent>
       </Card>
@@ -111,11 +109,7 @@ onMounted(fetchEditData)
         :fields="['name', 'description']"
       >
         <div class="space-y-4">
-          <div class="space-y-2">
-            <Label :for="`translation-name-${language.id}`">Név *</Label>
-            <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-            <InputError :message="errors[`translations.${language.id}.name`]" />
-          </div>
+          <InputField :id="`translation-name-${language.id}`" label="Név *" v-model="translation.name" :errors="errors[`translations.${language.id}.name`]" />
 
           <div class="space-y-2">
             <Label :for="`translation-description-${language.id}`">Leírás</Label>

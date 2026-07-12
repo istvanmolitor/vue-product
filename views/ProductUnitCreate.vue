@@ -2,7 +2,6 @@
 import { AdminLayout, BackButton, toastService, InputError } from '@admin'
 import InputField from '@admin/components/ui/InputField.vue'
 import Label from '@admin/components/ui/Label.vue'
-import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
@@ -86,17 +85,9 @@ const handleSubmit = async () => {
           :fields="['name', 'short_name']"
         >
           <div class="space-y-4">
-            <div class="space-y-2">
-              <Label :for="`translation-name-${language.id}`">Név</Label>
-              <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-              <InputError :message="errors[`translations.${language.id}.name`]" />
-            </div>
+            <InputField :id="`translation-name-${language.id}`" label="Név" v-model="translation.name" :errors="errors[`translations.${language.id}.name`]" />
 
-            <div class="space-y-2">
-              <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
-              <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
-              <InputError :message="errors[`translations.${language.id}.short_name`]" />
-            </div>
+            <InputField :id="`translation-short-name-${language.id}`" label="Rövid név" v-model="translation.short_name" :errors="errors[`translations.${language.id}.short_name`]" />
           </div>
         </TranslationRepeater>
       </CardContent>

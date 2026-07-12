@@ -2,7 +2,6 @@
 import { AdminLayout, BackButton, toastService, InputError, LoadingSpinner } from '@admin'
 import InputField from '@admin/components/ui/InputField.vue'
 import Label from '@admin/components/ui/Label.vue'
-import Input from '@admin/components/ui/Input.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
@@ -208,21 +207,15 @@ onMounted(() => {
           <template #default="{ activeKey }">
             <div v-if="activeKey === 'details'" class="space-y-4">
               <InputField id="sku" label="SKU" v-model="form.sku" placeholder="PROD-001" :required="true" :errors="errors.sku" />
-              <div class="space-y-2">
-                <Label for="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  :model-value="form.slug ?? ''"
-                  placeholder="termek-001"
-                  @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
-                />
-                <InputError :message="errors.slug" />
-              </div>
-              <div class="space-y-2">
-                <Label for="price">Ár</Label>
-                <Input id="price" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" />
-                <InputError :message="errors.price" />
-              </div>
+              <InputField
+                id="slug"
+                label="Slug"
+                :model-value="form.slug ?? ''"
+                placeholder="termek-001"
+                @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
+                :errors="errors.slug"
+              />
+              <InputField id="price" label="Ár" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" :errors="errors.price" />
               <div class="space-y-2">
                 <Label for="product_unit_id">Mértékegység</Label>
                 <select
@@ -254,11 +247,7 @@ onMounted(() => {
                 :fields="['name', 'description']"
               >
                 <div class="space-y-4">
-                  <div class="space-y-2">
-                    <Label :for="`translation-name-${language.id}`">Név</Label>
-                    <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-                    <InputError :message="errors[`translations.${language.id}.name`]" />
-                  </div>
+                  <InputField :id="`translation-name-${language.id}`" label="Név" v-model="translation.name" :errors="errors[`translations.${language.id}.name`]" />
 
                   <div class="space-y-2">
                     <Label :for="`translation-description-${language.id}`">Leírás</Label>

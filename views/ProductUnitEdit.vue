@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { AdminLayout, BackButton, toastService, InputError, LoadingSpinner } from '@admin'
+import { AdminLayout, BackButton, toastService, LoadingSpinner } from '@admin'
 import InputField from '@admin/components/ui/InputField.vue'
-import Label from '@admin/components/ui/Label.vue'
-import Input from '@admin/components/ui/Input.vue'
+import CheckboxField from '@admin/components/ui/CheckboxField.vue'
 import Card from '@admin/components/ui/Card.vue'
 import CardContent from '@admin/components/ui/CardContent.vue'
 import CardDescription from '@admin/components/ui/CardDescription.vue'
 import CardFooter from '@admin/components/ui/CardFooter.vue'
 import CardHeader from '@admin/components/ui/CardHeader.vue'
 import CardTitle from '@admin/components/ui/CardTitle.vue'
-import Checkbox from '@admin/components/ui/Checkbox.vue'
 import { normalizeTranslations } from '@language'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
 import { FormButtons } from '@admin'
@@ -88,30 +86,24 @@ onMounted(() => {
       </CardHeader>
       <CardContent class="space-y-6">
         <InputField id="code" label="Kód" v-model="form.code" placeholder="pcs" :required="true" :errors="errors.code" />
-        <div class="flex items-center space-x-2">
-          <Checkbox id="enabled" v-model="form.enabled" />
-          <Label for="enabled">Engedélyezett</Label>
-          <InputError :message="errors.enabled" />
-        </div>
+        <CheckboxField id="enabled" label="Engedélyezett" v-model="form.enabled" :errors="errors.enabled" />
 
         <div class="space-y-4 border-t pt-4">
           <h3 class="text-lg font-medium">Fordítások</h3>
-          <TranslationRepeater v-model="form.translations" :fields="['name', 'short_name']">
-            <template #default="{ language, translation }">
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label :for="`translation-name-${language.id}`">Név</Label>
-                  <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-                  <InputError :message="errors[`translations.${language.id}.name`]" />
-                </div>
+          <TranslationRepeater v-model="form.translations" #default="{ language, translation }" :fields="['name', 'short_name']">
+                <InputField
+                  :id="`translation-name-${language.id}`"
+                  label="Név"
+                  v-model="translation.name"
+                  :errors="errors[`translations.${language.id}.name`]"
+                />
 
-                <div class="space-y-2">
-                  <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
-                  <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
-                  <InputError :message="errors[`translations.${language.id}.short_name`]" />
-                </div>
-              </div>
-            </template>
+                <InputField
+                  :id="`translation-short-name-${language.id}`"
+                  label="Rövid név"
+                  v-model="translation.short_name"
+                  :errors="errors[`translations.${language.id}.short_name`]"
+                />
           </TranslationRepeater>
         </div>
       </CardContent>

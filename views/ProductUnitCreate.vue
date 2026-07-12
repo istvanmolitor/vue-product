@@ -82,23 +82,22 @@ const handleSubmit = async () => {
 
         <TranslationRepeater
           v-model="form.translations"
+          #default="{ language, translation }"
           :fields="['name', 'short_name']"
         >
-          <template #default="{ language, translation }">
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <Label :for="`translation-name-${language.id}`">Név</Label>
-                <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
-                <InputError :message="errors[`translations.${language.id}.name`]" />
-              </div>
-
-              <div class="space-y-2">
-                <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
-                <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
-                <InputError :message="errors[`translations.${language.id}.short_name`]" />
-              </div>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label :for="`translation-name-${language.id}`">Név</Label>
+              <Input :id="`translation-name-${language.id}`" v-model="translation.name" />
+              <InputError :message="errors[`translations.${language.id}.name`]" />
             </div>
-          </template>
+
+            <div class="space-y-2">
+              <Label :for="`translation-short-name-${language.id}`">Rövid név</Label>
+              <Input :id="`translation-short-name-${language.id}`" v-model="translation.short_name" />
+              <InputError :message="errors[`translations.${language.id}.short_name`]" />
+            </div>
+          </div>
         </TranslationRepeater>
       </CardContent>
       <CardFooter>

@@ -6,10 +6,22 @@ import EditButton from '@admin/components/ui/button/EditButton.vue'
 import DataTable from '@admin/components/ui/dataTable/DataTable.vue'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
-import { productService } from '@product/services/productService'
+import { productService, type Product } from '@product/services/productService'
 
 const router = useRouter()
 const table = ref()
+
+const resolveMainImageUrl = (row: Product): string | null => {
+  const productImages = row.product_images ?? []
+
+  if (productImages.length === 0) {
+    return null
+  }
+
+  const mainImage = productImages.find((productImage) => productImage.is_main)
+
+  return mainImage?.image_url ?? productImages[0]?.image_url ?? null
+}
 
 const deleteProduct = async (id: number) => {
   try {
@@ -37,6 +49,15 @@ const editProduct = (id: number) => {
         <CreateButton to="/admin/product/create">
           Új termék
         </CreateButton>
+      </template>
+      <template #cell-image="{ row }">
+        <img
+          v-if="resolveMainImageUrl(row as Product)"
+          :src="resolveMainImageUrl(row as Product)!"
+          alt=""
+          class="h-10 w-10 rounded object-cover"
+        />
+        <span v-else class="block h-10 w-10 rounded bg-muted" />
       </template>
       <template #cell-price="{ row }">
         {{ (row as any).price ? (row as any).price.toFixed(2) : '0.00' }}

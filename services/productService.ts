@@ -26,6 +26,7 @@ export interface Product {
   name?: string
   description?: string | null
   price?: number
+  price_formatted?: string
   active?: boolean
   product_unit_id?: number | null
   product_category_ids?: number[]

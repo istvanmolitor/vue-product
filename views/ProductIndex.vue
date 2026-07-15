@@ -60,7 +60,7 @@ const editProduct = (id: number) => {
         <span v-else class="block h-10 w-10 rounded bg-muted" />
       </template>
       <template #cell-price="{ row }">
-        {{ (row as any).price ? (row as any).price.toFixed(2) : '0.00' }}
+        {{ (row as any).price_formatted }}
       </template>
       <template #cell-active="{ row }">
         <span v-if="(row as any).active" class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">

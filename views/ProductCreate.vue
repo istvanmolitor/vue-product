@@ -16,13 +16,16 @@ import { FormButtons } from '@admin'
 import { useRouter } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
+import ProductPriceInput from '@product/components/ProductPriceInput.vue'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import TranslationRepeater from '@language/components/TranslationRepeater.vue'
+import type { Currency } from '@currency'
 
 const router = useRouter()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
+const defaultCurrency = ref<Currency | null>(null)
 const errors = ref<Record<string, string[]>>({})
 
 const form = reactive<ProductFormData>({
@@ -115,6 +118,7 @@ const fetchCreateData = async () => {
     const productsResponse = await productService.getCreateData()
 
     availableUnits.value = productsResponse.data.product_units
+    defaultCurrency.value = productsResponse.data.default_currency ?? null
   } catch (error) {
     console.error('Hiba a mértékegységek betöltésekor:', error)
     toastService.error('Hiba történt az adatok betöltésekor.')
@@ -188,7 +192,11 @@ onMounted(() => {
           @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
           :errors="errors.slug"
         />
-        <InputField id="price" label="Ár" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" :errors="errors.price" />
+        <div class="space-y-2">
+          <Label for="price">Ár</Label>
+          <ProductPriceInput id="price" v-model="form.price" :currency="defaultCurrency" />
+          <InputError :message="errors.price" />
+        </div>
         <div class="space-y-2">
           <Label for="product_unit_id">Mértékegység</Label>
           <select

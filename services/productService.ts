@@ -1,4 +1,5 @@
 import { createApiClient } from '@user/services/apiClient'
+import type { Currency } from '@currency'
 
 const api = createApiClient()
 
@@ -40,7 +41,7 @@ export interface Product {
 export interface ProductFormData {
   sku: string
   slug?: string | null
-  price?: number
+  price?: number | null
   active?: boolean
   product_unit_id?: number | null
   product_category_ids?: number[]
@@ -79,10 +80,10 @@ export const productService = {
     return api.get<SingleResponse<Product>>(`/api/admin/product/products/${id}`)
   },
   getCreateData() {
-    return api.get<{ product_units: ProductUnit[] }>('/api/admin/product/products/create')
+    return api.get<{ product_units: ProductUnit[]; default_currency: Currency | null }>('/api/admin/product/products/create')
   },
   getEditData(id: number | string) {
-    return api.get<{ data: Product; product_units: ProductUnit[] }>(`/api/admin/product/products/${id}/edit`)
+    return api.get<{ data: Product; product_units: ProductUnit[]; default_currency: Currency | null }>(`/api/admin/product/products/${id}/edit`)
   },
   create(product: ProductFormData) {
     return api.post<Product>('/api/admin/product/products', product)

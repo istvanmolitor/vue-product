@@ -18,9 +18,11 @@ import { reactive, ref, onMounted } from 'vue'
 import { normalizeTranslations } from '@language'
 import { productService, type ProductUnit, type ProductFormData } from '@product/services/productService'
 import ProductCategorySelect from '@product/components/ProductCategorySelect.vue'
+import ProductPriceInput from '@product/components/ProductPriceInput.vue'
 import MediaFilePicker from '@media/components/MediaFilePicker.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import TranslationRepeaterVue from '@language/components/TranslationRepeater.vue'
+import type { Currency } from '@currency'
 
 const TranslationRepeater = TranslationRepeaterVue as any
 
@@ -29,6 +31,7 @@ const route = useRoute()
 const isSaving = ref(false)
 const isLoading = ref(true)
 const availableUnits = ref<ProductUnit[]>([])
+const defaultCurrency = ref<Currency | null>(null)
 const errors = ref<Record<string, string[]>>({})
 const activeTab = ref('details')
 const productEditTabs = [
@@ -152,6 +155,7 @@ const fetchProduct = async () => {
     form.translations = normalizeTranslations(rawTranslations, ['name', 'description'])
 
     availableUnits.value = data.product_units
+    defaultCurrency.value = data.default_currency ?? null
   } catch (error) {
     console.error('Hiba a termék betöltésekor:', error)
     toastService.error('Hiba történt a termék betöltésekor.')
@@ -215,7 +219,11 @@ onMounted(() => {
                 @update:model-value="(value) => form.slug = String(value).trim().length > 0 ? String(value) : null"
                 :errors="errors.slug"
               />
-              <InputField id="price" label="Ár" v-model.number="form.price" type="number" step="0.01" placeholder="0.00" :errors="errors.price" />
+              <div class="space-y-2">
+                <Label for="price">Ár</Label>
+                <ProductPriceInput id="price" v-model="form.price" :currency="defaultCurrency" />
+                <InputError :message="errors.price" />
+              </div>
               <div class="space-y-2">
                 <Label for="product_unit_id">Mértékegység</Label>
                 <select
